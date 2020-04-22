@@ -23,7 +23,7 @@ def banUser(bot, message):
         database.setDBValue(target, "user", "banned", "1")
         bf.ReplyTo(bot, message, "Теперь @*" + target + "* сосет бибу", stack=False, timeout=3, use_markdown=True)
     else:
-       bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3, use_markdown=True)
+        bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3, use_markdown=True)
 
 def unBanUser(bot, message):
     username = message.from_user.username.replace("@", "")
@@ -32,7 +32,7 @@ def unBanUser(bot, message):
         database.setDBValue(target, "user", "banned", "0")
         bf.ReplyTo(bot, message, "Теперь @*" + target + "* не будет сосет бибу", stack=False, timeout=3, use_markdown=True)
     else:
-       bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3, use_markdown=True)
+        bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3, use_markdown=True)
 
 
 def addAdmin(bot, message):
@@ -48,7 +48,7 @@ def delAdmin(bot, message):
     username = message.from_user.username.replace("@", "")
     target = message.text.split(maxsplit=1)[1].replace("@", "")
     if isOwner(username):
-        database.setDBValue(target, "user", "admin", "1")
+        database.setDBValue(target, "user", "admin", "0")
         bf.ReplyTo(bot, message, "Теперь *" + target + "* больше не администратор", stack=False, timeout=3, use_markdown=True)
     else:
         bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3)
@@ -77,7 +77,7 @@ def showUserStat(bot, username, message):
     UI += "📈💰 Заработано на питомцах: " + database.getDBValue(username, "stats", "money_pet_produced") + "💶\n"
     UI += "📉💰Потрачено на рулетку: " + database.getDBValue(username, "stats", "money_lost_in_slot") + "💶\n"
     UI += "📉💰Потрачено на питомцев: " + database.getDBValue(username, "stats", "money_lost_in_pet") + "💶\n"
-    bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
+    bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
 
 def getBanList():
     output = ""

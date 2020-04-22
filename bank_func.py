@@ -1,10 +1,7 @@
-import fileio
 import database
 from xml.etree import ElementTree as ET
 import os
-import threading
 import time
-import user_func
 bank_database_folder = "database/users/banks/"
 
 blank_bank_obj = {
@@ -20,7 +17,6 @@ blank_user_obj = {
     "money":"1000",
     "blacklist":"0",
 }
-
 
 def isBankExist(username):
     return os.path.exists(bank_database_folder+username+".xml")
@@ -99,8 +95,6 @@ def setBankUserValue(bankowner, bankuser, value):
 def getValueByPercent(percent, value):
     return float(percent) / 100 * float(value)
 
-#addNewUserToBank("Llne_R", blank_user_obj)
-
 def makeMoney():
     for bank in getBankList():
         bankOwner = bank[3]
@@ -128,23 +122,3 @@ def makeMoney():
             else:
                 print("Skip, user money in bank = 0")
     pass
-
-counter = 0
-time_to_credit = 3600
-def bankLoop(bot):
-    global counter
-    chat_id = -1001351933744
-    counter += 1
-    if counter >= time_to_credit:
-        bot.send_message(chat_id, "Время собрать деньги для банков")
-        makeMoney()
-        counter = 0
-
-    pass
-#print(getBankList())
-#print(getBankUsers("Llne_R"))
-
-#print(getBankValue("Llne_R", "bankname"))
-#setBankValue("Llne_R", "bankname", "SSSS")
-#createBankEntry("Llne_R", blank_bank_obj)
-#setBankValue("Llne_R", blank_bank_obj)

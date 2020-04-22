@@ -68,8 +68,8 @@ class SendMessage(threading.Thread):
 class SlotGame(threading.Thread):
     ROLL_PRICE = 200
     FRUITS = ['🍌', '🍒', '🍐', '🍈', '🍇']
-    COSTS = [50, 100, 120, 150, 200, 270]
-    CHANCE = [120, 40, 40, 35, 5]
+    COSTS = [200, 250, 270, 400, 700, 2000]
+    CHANCE = [100, 100, 100, 100, 70]
 
     def __init__(self, bot, message, game_available=True, game_bet=1):
         self.bot = bot
@@ -164,6 +164,7 @@ class SlotGame(threading.Thread):
                     db.setDBValue(self.username, "eco", "money", str(usermoney))
                 else:
                     UI += "\nУдача не на вашей стороне 😄"
+                    db.setDBValue(self.username, "eco", "money", str(usermoney))
             self.bot.edit_message_text(UI, msg.chat.id, msg.message_id)
         time.sleep(15)
         chat_id = self.message.chat.id

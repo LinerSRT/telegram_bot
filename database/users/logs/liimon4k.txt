@@ -93,3 +93,5 @@ Limon4ik | Anon4ik [1026000086]: /balance
 Limon4ik | Anon4ik [1026000086]: /balance
 Limon4ik | Anon4ik [1026000086]: /rullet
 Limon4ik | Anon4ik [1026000086]: /payto forestgun78 5000
+None [-387896276]: /mybank
+None [-387896276]: /balance

@@ -158,7 +158,7 @@ def answer(message):
     UI += "💵Процент по дебету банка: *"+new_bank["debit_percent"]+"%*\n"
     UI += "⏱Время сбора процентов: *"+new_bank["time_to_pay"]+"м*\n"
     msg = bot.reply_to(message, UI, parse_mode="Markdown")
-    bf.ReplyTo(bot, message, UI, stack=False, timeout=20, use_markdown=True)
+    bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
 ##################################################################################
 @bot.message_handler(commands=["setbank"])
 def answer(message):
@@ -205,7 +205,7 @@ def answer(message):
         UI += "📝Описание банка: *"+bank_func.getBankValue(username, "description")+"*\n"
         UI += "💵Процент по кредиту банка: *"+bank_func.getBankValue(username, "credit_percent")+"%*\n"
         UI += "💵Процент по дебету банка: *"+bank_func.getBankValue(username, "debit_percent")+"%*\n"
-        bf.ReplyTo(bot, message, UI, stack=False, timeout=20, use_markdown=True)
+        bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
     else:
         bf.ReplyTo(bot, message, "Вы не владете банком", stack=False, timeout=3)
 ##################################################################################
@@ -235,7 +235,7 @@ def answer(message):
         UI += "💵Процент по кредиту банка: *" + bank_func.getBankValue(owner, "credit_percent") + "%*\n"
         UI += "💵Процент по дебету банка: *" + bank_func.getBankValue(owner, "debit_percent") + "%*\n"
         UI += "⏱Время сбора процентов: *" + bank_func.getBankValue(owner, "time_to_pay") + "м*\n"
-        bf.ReplyTo(bot, message, UI, stack=False, timeout=20, use_markdown=True)
+        bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
     else:
         bf.ReplyTo(bot, message, "Пользователь не владеет банком!", stack=False, timeout=3)
 ##################################################################################
@@ -261,7 +261,7 @@ def answer(message):
                 else:
                     UI += " | Дебетовый | Баланс "+str(user[2])+"💵"
                 UI += "\n"
-        bf.ReplyTo(bot, message, UI, stack=False, timeout=20, use_markdown=True)
+        bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
     else:
         bf.ReplyTo(bot, message, "У вас нет банка, купить /newbank", stack=False, timeout=3)
 ##################################################################################
@@ -458,7 +458,7 @@ def answer(message):
             usage_count += 1
             database.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
             bot.delete_message(message.chat.id, message.message_id)
-            bf.ReplyTo(bot, message, markdown, stack=False, timeout=6, use_markdown=True)
+            bf.ReplyTo(bot, message, markdown, stack=False, timeout=6)
         except:
             bf.ReplyTo(bot, message, "Временно не доступно", stack=False, timeout=3)
     else:
@@ -479,7 +479,7 @@ def send_photo(message):
             usage_count += 1
             database.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
             bot.delete_message(message.chat.id, message.message_id)
-            bf.ReplyTo(bot, message, markdown, stack=False, timeout=6, use_markdown=True)
+            bf.ReplyTo(bot, message, markdown, stack=False, timeout=6)
         except:
             bf.ReplyTo(bot, message, "Временно не доступно", stack=False, timeout=3)
     else:
@@ -534,10 +534,8 @@ def answer(message):
 ##################################################################################
 @bot.message_handler(commands=['help'])
 def command_help(message):
-    if not user_func.userCanUseCommand(message.from_user.username.replace("@", "")):
-        warn_message = bot.reply_to(message, "Соси бибу, ты забанен")
-        time.sleep(3)
-        bot.delete_message(message.chat.id, warn_message.message_id)
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
         return
     help_text = "\n"
     for key in config.commands:
@@ -549,8 +547,154 @@ def command_help(message):
 ##################################################################################
 @bot.message_handler(commands=["uptime"])
 def answer(message):
-    bf.ReplyTo(bot, message, "Ебашу на благо общества уже:  ⏱ *"+str(uptime["sec"])+" секунд(ы)* и "+"*"+str(uptime["min"])+"* минут(ы)", stack=False, timeout=10, use_markdown=True)
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    bf.ReplyTo(bot, message, "Ебашу на благо общества уже:  ⏱ *"+str(uptime["sec"])+" секунд(ы)* или "+"*"+str(uptime["min"])+"* минут(ы)", stack=False, timeout=10)
 ##################################################################################
+@bot.message_handler(commands=["ban_user"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        user_func.banUser(bot, message)
+    except:
+        bf.ReplyTo(bot, message,  "Команда введена не правильно. /ban_user [никнейм]", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["unban_user"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        user_func.unBanUser(bot, message)
+    except:
+        bf.ReplyTo(bot, message,  "Команда введена не правильно. /unban_user [никнейм]", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["add_admin"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        user_func.addAdmin(bot, message)
+    except:
+        bf.ReplyTo(bot, message,  "Команда введена не правильно. /add_admin [никнейм]", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["del_admin"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        user_func.delAdmin(bot, message)
+    except:
+        bf.ReplyTo(bot, message,  "Команда введена не правильно. /del_admin [никнейм]", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["admin_list"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        bf.ReplyTo(bot, message,  "Список администраторов:\n"+user_func.getAdminList(), stack=False, timeout=20)
+    except:
+        pass
+##################################################################################
+@bot.message_handler(commands=["banlist"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        bf.ReplyTo(bot, message, "Список забаненых:\n"+user_func.getBanList(), stack=False, timeout=20)
+    except:
+        pass
+##################################################################################
+@bot.message_handler(commands=["prices"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    help_text = "\n"
+    for key in config.global_economic_desc:
+        help_text += key + ":  "
+        help_text += config.global_economic_desc[key] + "\n\n"
+    bf.ReplyTo(bot, message, "Привет, @" + str(message.from_user.username) + " рад снова тебя видеть. \nВот актуальные цены бота:\n" + help_text, stack=False, timeout=20)
+##################################################################################
+@bot.message_handler(commands=["my_stat"])
+def answer(message):
+    username = message.from_user.username
+    if username is not None:
+        if not user_func.userCanUseCommand(message.from_user.username):
+            bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+            return
+        user_func.showUserStat(bot, username, message)
+    else:
+        bf.ReplyTo(bot, message, "У вас нет никнейма, установите его себе в настройках", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["stat_for"])
+def answer(message):
+    username = message.from_user.username
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    if not user_func.isUserAdmin(username):
+        bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3)
+        return
+    try:
+        target = message.text.split(maxsplit=1)[1].replace("@", "")
+        user_func.showUserStat(bot, target, message)
+    except:
+        bf.ReplyTo(bot, message, "Команда введена не правильно. /stat_for [никнейм]", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["payto"])
+def answer(message):
+    username = message.from_user.username.replace("@", "")
+    if not user_func.userCanUseCommand(username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        current_user = username.replace("@", "")
+        amount = int(message.text.split()[2])
+        target_user = message.text.split()[1].replace("@", "")
+        current_user_money = int(database.getDBValue(current_user, "eco", "money"))
+        target_user_money = int(database.getDBValue(target_user, "eco", "money"))
+        if current_user_money < amount:
+            bf.ReplyTo(bot, message, "Не достаточно денег, ваш баланс 💰"+str(current_user_money), stack=False, timeout=5)
+            return
+        if current_user == target_user:
+            bf.ReplyTo(bot, message, "Нельзя отправить деньги самому себе", stack=False, timeout=5)
+            return
+        else:
+            if not fileio.isUserExist(target_user):
+                bf.ReplyTo(bot, message, "Такого пользователя нет в базе!", stack=False, timeout=5)
+                return
+            try:
+                database.setDBValue(current_user, "eco", "money", str(current_user_money - amount))
+                database.setDBValue(target_user, "eco", "money", str(target_user_money + amount))
+                UI = "Отправка денег @"+target_user+"\n"
+                UI += " -> Отправлено: "+str(amount)+"\n"
+                UI += "💰 Ваш баланс: "+str(current_user_money-amount)
+                bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
+            except:
+                bf.ReplyTo(bot, message, "Ошибка, попробуй позже", stack=False, timeout=3)
+    except:
+        bf.ReplyTo(bot, message, "Команда введена не правильно, /payto [кому] [сколько]", stack=False, timeout=3)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
