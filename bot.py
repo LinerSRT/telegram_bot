@@ -3,7 +3,6 @@ import time
 import threading
 import random
 import bot_functions as bf
-TOKEN = '1203682284:AAGhxzP6PLAOFkGOgb0W3Naq3nJpSiINTZ4'
 bot = telebot.TeleBot(TOKEN, threaded=True, num_threads=8)
 uptime = {
     "sec":0,
@@ -17,18 +16,15 @@ def bot_updater():
         bot.polling(True)
     except:
         pass
-
 def rullet_loop():
     global GAME_AVAILABLE
     while True:
         time.sleep(10)
         GAME_AVAILABLE = True
-
 def second_loop():
     while True:
         time.sleep(1)
         uptime["sec"] += 1
-
 def minute_loop():
     while True:
         time.sleep(60)
@@ -39,7 +35,6 @@ def minute_loop():
                 bot.delete_message(item.chat.id, item.message_id)
             except:
                 pass
-
 def hour_loop():
     while True:
         time.sleep(3600)
@@ -49,11 +44,15 @@ def hour_loop():
 @bot.message_handler(commands=["rullet"])
 def answer(message):
     global GAME_AVAILABLE
-    #bf.SendMessage("test", bot, message, "Слоты").start()
-    bf.SlotGame(bot, message, 1000, game_available=GAME_AVAILABLE)
+    print(message.text.split())
+    if len(message.text.split()) < 2:
+        bf.SlotGame(bot, message, game_available=GAME_AVAILABLE)
+        return
+    username = message.from_user.username.replace("@", "")
+    bet = int(message.text.split()[1])
+    bf.SlotGame(bot, message, game_available=GAME_AVAILABLE, game_bet=bet)
     GAME_AVAILABLE = False
 
-    pass
 
 if __name__ == '__main__':
     threading.Thread(name="botUpdater", target=bot_updater, args=()).start()

@@ -1,6 +1,7 @@
 import threading
 import time
 import random
+import database as db
 import bot as mainf
 message_stack = []
 
@@ -54,16 +55,17 @@ class SendMessage(threading.Thread):
                 pass
             finally:
                 pass
-
 class SlotGame(threading.Thread):
     ROLL_PRICE = 200
     FRUITS = ['🍌', '🍒', '🍐', '🍈', '🍇']
     COSTS = [50, 100, 120, 150, 200, 270]
     CHANCE = [120, 40, 40, 35, 5]
 
-    def __init__(self, bot, message, usermoney, game_available=True, bet=1):
+    def __init__(self, bot, message, game_available=True, game_bet=1):
         self.bot = bot
         self.message = message
+        self.username = message.from_user.username.replace("@", "")
+        self.game_bet = game_bet
         if game_available:
             super(SlotGame, self).__init__()
             self.argument = str(message.from_user.id)
@@ -77,22 +79,18 @@ class SlotGame(threading.Thread):
 
     def getLine(self):
         return [random.choices(self.FRUITS, self.CHANCE)[0] for i in range(3)]
-
     def lineWin(self, line):
         return line[0] == line[1] == line[2]
-
     def diagonalLineWin(self, lines, reverse=False):
         if reverse:
             return lines[2][0] == lines[1][1] == lines[0][2]
         else:
             return lines[0][0] == lines[1][1] == lines[2][2]
-
     def getLinePrize(self, item):
         for index, fruit in enumerate(self.FRUITS):
             if fruit == item:
-                return self.COSTS[index]
+                return round(self.COSTS[index]*self.game_bet)
         return 0
-
     def processUI(self, rows):
         DISPLAY_STATE1 = "↘  ᅠ  ᅠ  ᅠ  ᅠ   ↙\n" \
                          "ᅠ  [ᅠ  ] [ᅠ  ] [ᅠ  ]\n" \
@@ -118,7 +116,20 @@ class SlotGame(threading.Thread):
         return [DISPLAY_STATE1, DISPLAY_STATE2, DISPLAY_STATE3, DISPLAY_STATE4]
 
     def run(self):
+        chat_id = self.message.chat.id
         msg = self.bot.reply_to(self.message, "⏳")
+        usermoney = int(db.getDBValue(self.username, "eco", "money"))
+        rullet_price = round(self.ROLL_PRICE*self.game_bet)
+        if usermoney < rullet_price:
+            time.sleep(2)
+            self.bot.edit_message_text("У вас не хватает денег. Стоимость: "+str(rullet_price)+"💵\nВаш баланс: "+str(usermoney)+"💵", msg.chat.id, msg.message_id)
+            time.sleep(5)
+            self.bot.delete_message(chat_id, msg.message_id)
+            self.bot.delete_message(chat_id, self.message.message_id)
+            mainf.GAME_AVAILABLE = True
+            return
+        usermoney -= rullet_price
+
         time.sleep(2)
         line = self.getLine()
         line2 = self.getLine()
@@ -126,7 +137,7 @@ class SlotGame(threading.Thread):
         DISP = self.processUI([line, line2, line3])
         for i in range(4):
             time.sleep(0.3)
-            UI = "Рулетка 🚢Три корабля🚢 подкручивает шансы и вот ваша игра:\n\n"
+            UI = "Вы потратили на игру "+str(rullet_price)+"💵\nРезультат:\n"
             UI += DISP[i]
             if i == 3:
                 won = 0
@@ -139,6 +150,8 @@ class SlotGame(threading.Thread):
                 if won != 0:
                     UI += "\nВы выиграли! 😎"
                     UI += "\nВаш приз составил: "+str(won)+"💵"
+                    usermoney += won
+                    db.setDBValue(self.username, "eco", "money", str(usermoney))
                 else:
                     UI += "\nУдача не на вашей стороне 😄"
             self.bot.edit_message_text(UI, msg.chat.id, msg.message_id)
