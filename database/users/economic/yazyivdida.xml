@@ -1,0 +1,7 @@
+<economic>
+		<money>500</money>
+		<treasures>0</treasures>
+		<credit>0</credit>
+		<credit_percent>0</credit_percent>
+		<credit_timeout_m>60</credit_timeout_m>
+</economic>
