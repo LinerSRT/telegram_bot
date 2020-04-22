@@ -28,8 +28,6 @@ def setDBValue(username, type_name, key, value):
         filename = fileio.economic_database_folder+username+".xml"
     elif type_name == "stats":
         filename = fileio.stats_database_folder+username+".xml"
-    elif type_name == "pets":
-        filename = fileio.pets_database_folder+username+".xml"
     else:
         return
     file = ET.parse(filename)

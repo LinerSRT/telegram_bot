@@ -3,7 +3,7 @@ import time
 import threading
 import bot_functions as bf
 import fileio
-import database
+import database as db
 import banned_func
 import user_func
 import bank_func
@@ -13,6 +13,7 @@ import urllib.request
 from urllib.request import Request
 import re
 import random
+import user as uf
 
 
 bot = telebot.TeleBot(TOKEN, threaded=True, num_threads=8)
@@ -87,11 +88,11 @@ def messageCounter(messages):
         if username is not None:
             username = username.replace("@", "")
             if fileio.isUserExist(username):
-                if database.getDBValue(username, "user", "banned") != "1":
+                if db.getDBValue(username, "user", "banned") != "1":
                     try:
-                        target_message_count = int(database.getDBValue(username, "stats", "message_count"))
+                        target_message_count = int(db.getDBValue(username, "stats", "message_count"))
                         target_message_count += 1
-                        database.setDBValue(username, "stats", "message_count", str(target_message_count))
+                        db.setDBValue(username, "stats", "message_count", str(target_message_count))
                     except:
                         pass
 def newUserListener(messages):
@@ -114,6 +115,34 @@ bot.set_update_listener(userListener)
 bot.set_update_listener(banListener)
 bot.set_update_listener(messageCounter)
 bot.set_update_listener(newUserListener)
+##################################################################################
+@bot.message_handler(commands=["test"])
+def answer(message):
+    username = message.from_user.username.replace("@", "")
+    if not user_func.isOwner(username):
+        return
+    UI = ""
+    for item in db.getListUsersWhereValue("eco", "money", None):
+        print(item)
+        UI += "User: "+item[0]+" | money "+str(item[1])+"\n"
+    bf.ReplyTo(bot, message, UI, stack=False, timeout=30)
+
+
+##################################################################################
+@bot.message_handler(commands=["reset"])
+def answer(message):
+    username = message.from_user.username.replace("@", "")
+    if not user_func.isOwner(username):
+        return
+    UI = ""
+    for user in fileio.getUserList():
+        db.setDBValue(user, "eco", "money", "1000")
+    for item in db.getListUsersWhereValue("eco", "money", None):
+        print(item)
+        UI += "User: "+item[0]+" | money "+str(item[1])+"\n"
+    bf.ReplyTo(bot, message, UI, stack=False, timeout=30)
+
+
 
 ##################################################################################
 @bot.message_handler(commands=["rullet"])
@@ -143,21 +172,20 @@ def answer(message):
         bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
         return
     username = message.from_user.username.replace("@", "")
-    current_user_money = int(database.getDBValue(username, "eco", "money"))
+    current_user_money = int(db.getDBValue(username, "eco", "money"))
     bank_cost = config.global_economic["bank_cost"]
     if current_user_money < bank_cost:
         bf.ReplyTo(bot, message, "Не хватает денег, заказать банк стоит "+str(bank_cost), stack=False, timeout=3)
         return
     new_bank = bank_func.blank_bank_obj
-    database.setDBValue(username, "eco", "money", str(current_user_money - bank_cost))
+    db.setDBValue(username, "eco", "money", str(current_user_money - bank_cost))
     bank_func.createBankEntry(username, new_bank)
     UI = "🏦Новый банк создан!\n"
-    UI += "\t\tНазвание банка: *"+new_bank["bankname"]+"*\n"
-    UI += "📝Описание банка: *"+new_bank["description"]+"*\n"
-    UI += "💵Процент по кредиту банка: *"+new_bank["credit_percent"]+"%*\n"
-    UI += "💵Процент по дебету банка: *"+new_bank["debit_percent"]+"%*\n"
-    UI += "⏱Время сбора процентов: *"+new_bank["time_to_pay"]+"м*\n"
-    msg = bot.reply_to(message, UI, parse_mode="Markdown")
+    UI += "\t\tНазвание банка: "+new_bank["bankname"]+"\n"
+    UI += "📝Описание банка: "+new_bank["description"]+"\n"
+    UI += "💵Процент по кредиту банка: "+new_bank["credit_percent"]+"%\n"
+    UI += "💵Процент по дебету банка: "+new_bank["debit_percent"]+"%\n"
+    UI += "⏱Время сбора процентов: "+new_bank["time_to_pay"]+"м\n"
     bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
 ##################################################################################
 @bot.message_handler(commands=["setbank"])
@@ -201,10 +229,10 @@ def answer(message):
             bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
             return
         UI = "🏦Ваш банк изменен!\n"
-        UI += "\t\tНазвание банка: *"+bank_func.getBankValue(username, "bankname")+"*\n"
-        UI += "📝Описание банка: *"+bank_func.getBankValue(username, "description")+"*\n"
-        UI += "💵Процент по кредиту банка: *"+bank_func.getBankValue(username, "credit_percent")+"%*\n"
-        UI += "💵Процент по дебету банка: *"+bank_func.getBankValue(username, "debit_percent")+"%*\n"
+        UI += "\t\tНазвание банка: "+bank_func.getBankValue(username, "bankname")+"\n"
+        UI += "📝Описание банка: "+bank_func.getBankValue(username, "description")+"\n"
+        UI += "💵Процент по кредиту банка: "+bank_func.getBankValue(username, "credit_percent")+"%\n"
+        UI += "💵Процент по дебету банка: "+bank_func.getBankValue(username, "debit_percent")+"%\n"
         bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
     else:
         bf.ReplyTo(bot, message, "Вы не владете банком", stack=False, timeout=3)
@@ -230,11 +258,11 @@ def answer(message):
         return
     owner = command[1].replace("@", "")
     if bank_func.isBankExist(owner):
-        UI = "\t\tНазвание банка: *" + bank_func.getBankValue(owner, "bankname") + "*\n"
-        UI += "📝Описание банка: *" + bank_func.getBankValue(owner, "description") + "*\n"
-        UI += "💵Процент по кредиту банка: *" + bank_func.getBankValue(owner, "credit_percent") + "%*\n"
-        UI += "💵Процент по дебету банка: *" + bank_func.getBankValue(owner, "debit_percent") + "%*\n"
-        UI += "⏱Время сбора процентов: *" + bank_func.getBankValue(owner, "time_to_pay") + "м*\n"
+        UI = "\t\tНазвание банка: " + bank_func.getBankValue(owner, "bankname") + "\n"
+        UI += "📝Описание банка: " + bank_func.getBankValue(owner, "description") + "\n"
+        UI += "💵Процент по кредиту банка: " + bank_func.getBankValue(owner, "credit_percent") + "%\n"
+        UI += "💵Процент по дебету банка: " + bank_func.getBankValue(owner, "debit_percent") + "%\n"
+        UI += "⏱Время сбора процентов: " + bank_func.getBankValue(owner, "time_to_pay") + "м\n"
         bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
     else:
         bf.ReplyTo(bot, message, "Пользователь не владеет банком!", stack=False, timeout=3)
@@ -272,10 +300,10 @@ def answer(message):
         return
     username = message.from_user.username.replace("@", "")
     command = message.text.split()
-    if len(command) < 1:
+    if len(command) < 3:
         bf.ReplyTo(bot, message, "Команда введена не правильно. /paytobank [владелец] [сумма]. Список банков /banks", stack=False, timeout=5)
         return
-    usermoney = int(database.getDBValue(username, "eco", "money"))
+    usermoney = int(db.getDBValue(username, "eco", "money"))
     owner = command[1].replace("@", "")
     amount = int(command[2])
     if amount > usermoney:
@@ -288,7 +316,7 @@ def answer(message):
             UI = "Вы внесли в свой банк 🏦" + bank_func.getBankValue(owner, "bankname") + " деньги на сумму: "+str(amount)+"💵\n"
             UI += "Баланс вашего банка: "+str(bank_money)+"💵"
             bank_func.setBankValue(owner, "money", str(bank_money))
-            database.setDBValue(username, "eco", "money", str(usermoney-amount))
+            db.setDBValue(username, "eco", "money", str(usermoney-amount))
             bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
             return
         if int(len(bank_func.getBankUsers(owner))) > 0:
@@ -304,7 +332,7 @@ def answer(message):
                         if credit_money < 0:
                             credit_money = 0
                         bank_func.setBankUserValue(owner, username, credit_money)
-                        database.setDBValue(username, "eco", "money", str(usermoney))
+                        db.setDBValue(username, "eco", "money", str(usermoney))
                         UI = "Вы заплатили в банк 🏦 @"+owner+"\n"
                         UI += "Платеж: "+str(amount)+"💵 плюс кредит банка "+str(credit_percent)+"% итого списано - "+str(amount - round(bank_func.getValueByPercent(credit_percent, amount)))+"💵\n"
                         UI += "Спасибо что пользуетесь услугами банка: 🏦"+bank_func.getBankValue(owner, "bankname")
@@ -317,7 +345,7 @@ def answer(message):
                         usermoney = usermoney - amount
                         bank_func.setBankValue(owner, "money", str(bank_money))
                         bank_func.setBankUserValue(owner, username, debet_money)
-                        database.setDBValue(username, "eco", "money", str(usermoney))
+                        db.setDBValue(username, "eco", "money", str(usermoney))
                         UI = "Вы внесли в банк 🏦 @"+owner+"\n"
                         UI += "Платеж: "+str(amount)+"💵\n"
                         UI += "Спасибо что пользуетесь услугами банка: 🏦"+bank_func.getBankValue(owner, "bankname")
@@ -339,7 +367,7 @@ def answer(message):
     if len(command) < 2:
         bf.ReplyTo(bot, message, "Команда введена не правильно. /getcredit [владелец] [сумма]. Список банков /banks", stack=False, timeout=5)
         return
-    usermoney = int(database.getDBValue(username, "eco", "money"))
+    usermoney = int(db.getDBValue(username, "eco", "money"))
     owner = command[1].replace("@", "")
     amount = int(command[2])
     if bank_func.isBankExist(owner):
@@ -361,7 +389,7 @@ def answer(message):
                         usermoney = usermoney + (amount - round(bank_func.getValueByPercent(credit_percent, amount)))
                         bank_func.setBankValue(owner, "money", str(bank_money))
                         bank_func.setBankUserValue(owner, username, credit_money)
-                        database.setDBValue(username, "eco", "money", str(usermoney))
+                        db.setDBValue(username, "eco", "money", str(usermoney))
                         UI = "Вы успешно взяли кредит в банке 🏦 @"+owner+"\n"
                         UI += "Затребовано: "+str(amount)+"💵\nКредит банка "+str(credit_percent)+"% \nИтого получено - "+str(amount - round(bank_func.getValueByPercent(credit_percent, amount)))+"💵\n"
                         UI += "Спасибо что пользуетесь услугами банка: 🏦"+bank_func.getBankValue(owner, "bankname")+"\n\n"
@@ -378,7 +406,7 @@ def answer(message):
         new_bank_user["money"] = str(credit_money)
         bank_func.setBankValue(owner, "money", str(bank_money))
         bank_func.setBankUserValue(owner, username, credit_money)
-        database.setDBValue(username, "eco", "money", str(usermoney))
+        db.setDBValue(username, "eco", "money", str(usermoney))
         bank_func.addNewUserToBank(owner, new_bank_user)
         UI = "Вы успешно взяли кредит в банке 🏦 @" + owner + " и стали его участником\n"
         UI += "Затребовано: " + str(amount) + "💵\nКредит банка " + str(credit_percent) + "% \nИтого получено - " + str(
@@ -454,9 +482,9 @@ def answer(message):
             content = resource.read().decode(resource.headers.get_content_charset())
             urls = re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+([/a-z_0-9]*.mp4)', content)
             markdown = "[ᅠ](http://www.gifporntube.com" + str(urls[0]) + ")"
-            usage_count = int(database.getDBValue(message.from_user.username, "stats", "sex_command_count"))
+            usage_count = int(db.getDBValue(message.from_user.username, "stats", "sex_command_count"))
             usage_count += 1
-            database.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
+            db.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
             bot.delete_message(message.chat.id, message.message_id)
             bf.ReplyTo(bot, message, markdown, stack=False, timeout=6)
         except:
@@ -471,13 +499,13 @@ def send_photo(message):
         return
     if user_func.isUserAdmin(message.from_user.username):
         try:
-            usage_count = int(database.getDBValue(message.from_user.username, "stats", "sex_command_count"))
+            usage_count = int(db.getDBValue(message.from_user.username, "stats", "sex_command_count"))
             usage_count += 1
-            database.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
+            db.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
             markdown = "[ᅠ](https://www.scrolller.com/media/" + str(random.randint(20, 2000)) + ".jpg)"
-            usage_count = int(database.getDBValue(message.from_user.username, "stats", "sex_command_count"))
+            usage_count = int(db.getDBValue(message.from_user.username, "stats", "sex_command_count"))
             usage_count += 1
-            database.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
+            db.setDBValue(message.from_user.username, "stats", "sex_command_count", str(usage_count))
             bot.delete_message(message.chat.id, message.message_id)
             bf.ReplyTo(bot, message, markdown, stack=False, timeout=6)
         except:
@@ -491,14 +519,14 @@ def answer(message):
         bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
         return
     username = message.from_user.username.replace("@", "")
-    bf.ReplyTo(bot, message, "💰 Ваш баланс - "+str(database.getDBValue(username, "eco", "money")), stack=False, timeout=20)
+    bf.ReplyTo(bot, message, "💵 Ваш баланс - "+str(db.getDBValue(username, "eco", "money")), stack=False, timeout=20)
 ##################################################################################
 @bot.message_handler(commands=["rullet_bank"])
 def answer(message):
     if not user_func.userCanUseCommand(message.from_user.username):
         bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
         return
-    values = database.getListUsersWhereValue("stats", "money_lost_in_slot", None)
+    values = db.getListUsersWhereValue("stats", "money_lost_in_slot", None)
     out = 0
     for item in values:
         out += int(item[1])
@@ -510,7 +538,7 @@ def answer(message):
     if not user_func.userCanUseCommand(message.from_user.username):
         bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
         return
-    values = database.getListUsersWhereValue("stats", "message_count", None)
+    values = db.getListUsersWhereValue("stats", "message_count", None)
     out = 0
     for item in values:
         out += int(item[1])
@@ -525,7 +553,7 @@ def answer(message):
         key = message.text.split(maxsplit=4)[3]
         value = message.text.split(maxsplit=4)[4]
         if fileio.isUserExist(target):
-            database.setDBValue(target, obj, key, value)
+            db.setDBValue(target, obj, key, value)
             bf.ReplyTo(bot, message, "Значение "+key+" у "+target+" теперь - "+value, stack=False, timeout=3)
         else:
             bf.ReplyTo(bot, message, "Данного пользователя нет в базе данных", stack=False, timeout=3)
@@ -550,7 +578,7 @@ def answer(message):
     if not user_func.userCanUseCommand(message.from_user.username):
         bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
         return
-    bf.ReplyTo(bot, message, "Ебашу на благо общества уже:  ⏱ *"+str(uptime["sec"])+" секунд(ы)* или "+"*"+str(uptime["min"])+"* минут(ы)", stack=False, timeout=10)
+    bf.ReplyTo(bot, message, "Ебашу на благо общества уже:  ⏱ "+str(uptime["sec"])+" секунд(ы) или "+""+str(uptime["min"])+" минут(ы)", stack=False, timeout=10)
 ##################################################################################
 @bot.message_handler(commands=["ban_user"])
 def answer(message):
@@ -659,10 +687,10 @@ def answer(message):
         current_user = username.replace("@", "")
         amount = int(message.text.split()[2])
         target_user = message.text.split()[1].replace("@", "")
-        current_user_money = int(database.getDBValue(current_user, "eco", "money"))
-        target_user_money = int(database.getDBValue(target_user, "eco", "money"))
+        current_user_money = int(db.getDBValue(current_user, "eco", "money"))
+        target_user_money = int(db.getDBValue(target_user, "eco", "money"))
         if current_user_money < amount:
-            bf.ReplyTo(bot, message, "Не достаточно денег, ваш баланс 💰"+str(current_user_money), stack=False, timeout=5)
+            bf.ReplyTo(bot, message, "Не достаточно денег, ваш баланс 💵"+str(current_user_money), stack=False, timeout=5)
             return
         if current_user == target_user:
             bf.ReplyTo(bot, message, "Нельзя отправить деньги самому себе", stack=False, timeout=5)
@@ -672,16 +700,52 @@ def answer(message):
                 bf.ReplyTo(bot, message, "Такого пользователя нет в базе!", stack=False, timeout=5)
                 return
             try:
-                database.setDBValue(current_user, "eco", "money", str(current_user_money - amount))
-                database.setDBValue(target_user, "eco", "money", str(target_user_money + amount))
+                db.setDBValue(current_user, "eco", "money", str(current_user_money - amount))
+                db.setDBValue(target_user, "eco", "money", str(target_user_money + amount))
                 UI = "Отправка денег @"+target_user+"\n"
                 UI += " -> Отправлено: "+str(amount)+"\n"
-                UI += "💰 Ваш баланс: "+str(current_user_money-amount)
+                UI += "💵 Ваш баланс: "+str(current_user_money-amount)
                 bf.ReplyTo(bot, message, UI, stack=False, timeout=20)
             except:
                 bf.ReplyTo(bot, message, "Ошибка, попробуй позже", stack=False, timeout=3)
     except:
         bf.ReplyTo(bot, message, "Команда введена не правильно, /payto [кому] [сколько]", stack=False, timeout=3)
+
+##################################################################################
+@bot.message_handler(commands=["give_money"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        username = message.from_user.username.replace("@", "")
+        if user_func.isOwner(username):
+            command = int(message.text.split()[1])
+            print(command)
+            for user in fileio.getUserList():
+                current_money = int(db.getDBValue(username, "eco", "money"))
+                db.setDBValue(user, "eco", "money", str(current_money+command))
+            bf.ReplyTo(bot, message, "Все пользователи получили +"+str(command)+"💵", stack=False, timeout=20)
+    except:
+        bf.ReplyTo(bot, message,  "Команда введена не правильно. /make_money", stack=False, timeout=3)
+##################################################################################
+@bot.message_handler(commands=["grab_money"])
+def answer(message):
+    if not user_func.userCanUseCommand(message.from_user.username):
+        bf.ReplyTo(bot, message, "Соси бибу, ты забанен", stack=False, timeout=3)
+        return
+    try:
+        username = message.from_user.username.replace("@", "")
+        if user_func.isOwner(username):
+            command = int(message.text.split()[1])
+            print(command)
+            for user in fileio.getUserList():
+                current_money = int(db.getDBValue(username, "eco", "money"))
+                db.setDBValue(user, "eco", "money", str(current_money-command))
+            bf.ReplyTo(bot, message, "Все пользователи потеряли -"+str(command)+"💵", stack=False, timeout=20)
+    except:
+        bf.ReplyTo(bot, message,  "Команда введена не правильно. /make_money", stack=False, timeout=3)
+##################################################################################
 
 
 

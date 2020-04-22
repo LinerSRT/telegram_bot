@@ -18,6 +18,7 @@ class ReplyTo(threading.Thread):
         self.start()
 
     def run(self):
+        chat_id = self.message.chat.id
         if self.use_markdown:
             msg = self.bot.reply_to(self.message, self.text, parse_mode="Markdown")
         else:
@@ -28,7 +29,6 @@ class ReplyTo(threading.Thread):
         else:
             try:
                 time.sleep(self.timeout)
-                chat_id = self.message.chat.id
                 self.bot.delete_message(chat_id, msg.message_id)
                 self.bot.delete_message(chat_id, self.message.message_id)
             except:

@@ -76,7 +76,13 @@ def insertUserObj(user_obj):
     else:
         pass
 
-
+def getUserList():
+    out = []
+    for filename in os.listdir(users_database_folder):
+        if "xml" in filename:
+            user = filename.replace(".xml", "")
+            out.append(user)
+    return out
 
 
 
