@@ -1,5 +1,5 @@
-import time
 import random
+import bot_functions as bf
 
 banned_text = [
     "ты в бане, пиздуй отсюда",
@@ -28,7 +28,5 @@ banned_text = [
     "долбоеб, ты забанен"]
 
 def processUser(username, bot, message):
-    rofl = bot.send_message(message.chat.id, "@" + username + ", " + random.choice(banned_text))
     bot.delete_message(message.chat.id, message.message_id)
-    time.sleep(3)
-    bot.delete_message(message.chat.id, rofl.message_id)
+    bf.ReplyTo(bot, message, "@" + username + ", " + random.choice(banned_text), stack=False, timeout=5)

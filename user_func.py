@@ -2,7 +2,7 @@ import time
 import database
 import fileio
 import config
-from bot import message_stack
+import bot_functions as bf
 
 def userCanUseCommand(username):
     if database.getDBValue(username, "user", "banned") == "1":
@@ -21,40 +21,38 @@ def banUser(bot, message):
     target = message.text.split(maxsplit=1)[1].replace("@", "")
     if isUserAdmin(username):
         database.setDBValue(target, "user", "banned", "1")
-        msg = bot.reply_to(message, "Теперь @*" + target + "* сосет бибу", parse_mode="Markdown")
+        bf.ReplyTo(bot, message, "Теперь @*" + target + "* сосет бибу", stack=False, timeout=3, use_markdown=True)
     else:
-        msg = bot.reply_to(message, "Доступно только администраторам")
-    message_stack.append(msg)
+       bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3, use_markdown=True)
 
 def unBanUser(bot, message):
     username = message.from_user.username.replace("@", "")
     target = message.text.split(maxsplit=1)[1].replace("@", "")
     if isUserAdmin(username):
         database.setDBValue(target, "user", "banned", "0")
-        msg = bot.reply_to(message, "Теперь *" + target + "* не будет сосать бибу", parse_mode="Markdown")
+        bf.ReplyTo(bot, message, "Теперь @*" + target + "* не будет сосет бибу", stack=False, timeout=3, use_markdown=True)
     else:
-        msg = bot.reply_to(message, "Доступно только администраторам")
-    message_stack.append(msg)
+       bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3, use_markdown=True)
+
 
 def addAdmin(bot, message):
     username = message.from_user.username.replace("@", "")
     target = message.text.split(maxsplit=1)[1].replace("@", "")
     if isUserAdmin(username):
         database.setDBValue(target, "user", "admin", "1")
-        msg = bot.reply_to(message, "Теперь 👑 *" + target + "* администратор", parse_mode="Markdown")
+        bf.ReplyTo(bot, message, "Теперь 👑 *" + target + "* администратор", stack=False, timeout=3, use_markdown=True)
     else:
-        msg = bot.reply_to(message, "Доступно только администраторам")
-    message_stack.append(msg)
+        bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3)
 
 def delAdmin(bot, message):
     username = message.from_user.username.replace("@", "")
     target = message.text.split(maxsplit=1)[1].replace("@", "")
     if isOwner(username):
-        database.setDBValue(target, "user", "admin", "0")
-        msg = bot.reply_to(message, "Теперь *" + target + "* больше не админ", parse_mode="Markdown")
+        database.setDBValue(target, "user", "admin", "1")
+        bf.ReplyTo(bot, message, "Теперь *" + target + "* больше не администратор", stack=False, timeout=3, use_markdown=True)
     else:
-        msg = bot.reply_to(message, "Доступно только создателю")
-    message_stack.append(msg)
+        bf.ReplyTo(bot, message, "Доступно только администраторам", stack=False, timeout=3)
+
 
 def showUserStat(bot, username, message):
     if not fileio.isUserExist(username):
@@ -79,8 +77,7 @@ def showUserStat(bot, username, message):
     UI += "📈💰 Заработано на питомцах: " + database.getDBValue(username, "stats", "money_pet_produced") + "💶\n"
     UI += "📉💰Потрачено на рулетку: " + database.getDBValue(username, "stats", "money_lost_in_slot") + "💶\n"
     UI += "📉💰Потрачено на питомцев: " + database.getDBValue(username, "stats", "money_lost_in_pet") + "💶\n"
-    msg = bot.reply_to(message, UI)
-    message_stack.append(msg)
+    bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
 
 def getBanList():
     output = ""
@@ -107,13 +104,11 @@ def getUserPets(bot, message):
     username = message.from_user.username.replace("@", "")
     UI = "Ваши питомцы: \n\n"
     if len(database.getListPetsByUserName(username)) == 0:
-        msg = bot.reply_to(message, "У вас нет питомцев, купить /buy_pet [ид питомца] [имя питомца]")
-        message_stack.append(msg)
+        bf.ReplyTo(bot, message, "У вас нет питомцев, купить /buy_pet [ид питомца] [имя питомца]", stack=False, timeout=3)
         return
     for pet in database.getListPetsByUserName(username):
         UI += "ID["+pet[0]+"] "+str(database.getPetValue(username, str(pet[0]), "pet_avatar"))+" "+str(pet[1])+"\n"
-    msg = bot.reply_to(message, UI)
-    message_stack.append(msg)
+    bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
 
 
 def getPetStat(bot, message):
@@ -146,16 +141,13 @@ def getPetStat(bot, message):
                 UI += "🌟 Опыт питомца: " + str(database.getPetValue(username, target_pet_id, "pet_exp")) + "\n"
                 UI += "💎 Найдено сокровищ питомцем: " + str(
                     database.getPetValue(username, target_pet_id, "pet_unique_treasure")) + "\n"
-                msg = bot.reply_to(message, UI)
+                bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
             else:
-                msg = bot.reply_to(message, "Такого питомца не существует, посмотреть список питомцев /mypets")
-                message_stack.append(msg)
+                bf.ReplyTo(bot, message, "Такого питомца не существует, посмотреть список питомцев /mypets", stack=False, timeout=3)
         else:
-            msg = bot.reply_to(message, "У вас нет ни одного питомца, купить /buy_pet [ид питомца] [имя питомца]")
-            message_stack.append(msg)
+            bf.ReplyTo(bot, message, "У вас нет ни одного питомца, купить /buy_pet [ид питомца] [имя питомца]", stack=False, timeout=3)
     except:
-        msg = bot.reply_to(message, "Команда введена не правильно. /pet [ид]")
-        message_stack.append(msg)
+        bf.ReplyTo(bot, message, "Команда введена не правильно. /pet [ид]", stack=False, timeout=3)
 
 def buyPet(bot, message):
     username = message.from_user.username.replace("@", "")
@@ -166,8 +158,7 @@ def buyPet(bot, message):
             UI = "У вас не достаточно денег для покупки!\n"
             UI += "Цена нового питомца составляет: "+str(pet_cost)+"💵\n"
             UI += "💰Ваш баланс: "+str(user_money)+"\n"
-            msg = bot.reply_to(message, UI)
-            message_stack.append(msg)
+            bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
             return
         try:
             target_pet_id = message.text.split()[1]
@@ -202,13 +193,10 @@ def buyPet(bot, message):
                 database.getPetValue(username, target_pet_id, "pet_passive_produce_timeout_m")) + "\n"
             UI += "📊 Уровень питомца: " + str(database.getPetValue(username, target_pet_id, "pet_level")) + "\n"
             UI += "🌟 Опыт питомца: " + str(database.getPetValue(username, target_pet_id, "pet_exp")) + "\n"
-            UI += "💎 Найдено сокровищ питомцем: " + str(
-                database.getPetValue(username, target_pet_id, "pet_unique_treasure")) + "\n"
-            msg = bot.reply_to(message, UI)
-            message_stack.append(msg)
+            UI += "💎 Найдено сокровищ питомцем: " + str(database.getPetValue(username, target_pet_id, "pet_unique_treasure")) + "\n"
+            bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
         except:
-            msg = bot.reply_to(message, "Команда введена не правильно. /buy_pet [ид питомца] [имя питомца]\n ID используется для обращения к конкретному питомцу")
-            message_stack.append(msg)
+            bf.ReplyTo(bot, message, "Команда введена не правильно. /buy_pet [ид питомца] [имя питомца]\n ID используется для обращения к конкретному питомцу", stack=False, timeout=3)
 
 def setPetName(bot, message):
     username = message.from_user.username.replace("@", "")
@@ -224,8 +212,7 @@ def setPetName(bot, message):
                     UI = "У вас не достаточно денег для смены имени!\n"
                     UI += "Цена смены составляет: " + str(change_name_cost) + "💵\n"
                     UI += "💰 Ваш баланс: " + str(user_money) + "\n"
-                    msg = bot.reply_to(message, UI)
-                    message_stack.append(msg)
+                    bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
                     return
                 lost_current = int(database.getDBValue(username, "stats", "money_lost_in_pet"))
                 lost = lost_current + (config.global_economic["pet_change_name_cost"])
@@ -235,17 +222,13 @@ def setPetName(bot, message):
                 database.setPetValueByPos(username, target_pet_id, "pet_name", target_value)
                 UI += "Изменено:\n"
                 UI += "▫️Имя питомца: " + str(database.getPetValue(username, target_pet_id, "pet_name")) + "\n"
-                msg = bot.reply_to(message, UI)
-                message_stack.append(msg)
+                bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
             else:
-                msg = bot.reply_to(message, "Такого питомца не существует, посмотреть список питомцев /mypets")
-                message_stack.append(msg)
+                bf.ReplyTo(bot, message, "Такого питомца не существует, посмотреть список питомцев /mypets", stack=False, timeout=3)
         else:
-            msg = bot.reply_to(message, "У вас нет ни одного питомца, купить /buy_pet [ид питомца] [имя питомца]")
-            message_stack.append(msg)
+            bf.ReplyTo(bot, message, "У вас нет ни одного питомца, купить /buy_pet [ид питомца] [имя питомца]", stack=False, timeout=3)
     except:
-        msg = bot.reply_to(message, "Команда введена не правильно. /pet_setname [ид] [имя]")
-        message_stack.append(msg)
+        bf.ReplyTo(bot, message, "Команда введена не правильно. /pet_setname [ид] [имя]", stack=False, timeout=3)
 
 def setPetAvatar(bot, message):
     username = message.from_user.username.replace("@", "")
@@ -261,8 +244,7 @@ def setPetAvatar(bot, message):
                     UI = "У вас не достаточно денег для смены аватара!\n"
                     UI += "Цена смены составляет: " + str(change_name_cost) + "💵\n"
                     UI += "💰 Ваш баланс: " + str(user_money) + "\n"
-                    msg = bot.reply_to(message, UI)
-                    message_stack.append(msg)
+                    bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
                     return
                 lost_current = int(database.getDBValue(username, "stats", "money_lost_in_pet"))
                 lost = lost_current + (config.global_economic["pet_change_avatar_cost"])
@@ -273,14 +255,10 @@ def setPetAvatar(bot, message):
 
                 UI += "Изменено:\n"
                 UI += "▫ Аватар питомца: " + str(database.getPetValue(username, target_pet_id, "pet_avatar")) + "\n"
-                msg = bot.reply_to(message, UI)
-                message_stack.append(msg)
+                bf.ReplyTo(bot, message, UI, stack=False, timeout=10)
             else:
-                msg = bot.reply_to(message, "Такого питомца не существует, посмотреть список питомцев /mypets")
-                message_stack.append(msg)
+                bf.ReplyTo(bot, message, "Такого питомца не существует, посмотреть список питомцев /mypets", stack=False, timeout=3)
         else:
-            msg = bot.reply_to(message, "У вас нет ни одного питомца, купить /buy_pet [ид питомца] [имя питомца]")
-            message_stack.append(msg)
+            bf.ReplyTo(bot, message, "У вас нет ни одного питомца, купить /buy_pet [ид питомца] [имя питомца]", stack=False, timeout=3)
     except:
-        msg = bot.reply_to(message, "Команда введена не правильно. /pet_setavatar [ид] [смайл]")
-        message_stack.append(msg)
+        bf.ReplyTo(bot, message, "Команда введена не правильно. /pet_setavatar [ид] [смайл]", stack=False, timeout=3)

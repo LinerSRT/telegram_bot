@@ -384,3 +384,5 @@ None [-1001465006818]: /kick @just_a_bot_for_redmi_bot
 None [-1001465006818]: Лайнер
 None [-1001465006818]: Привел
 None [-1001465006818]: /kick @just_a_bot_for_redmi_bot
+None [-1001351933744]: Ура
+None [-1001351933744]: Я сделал анлок
