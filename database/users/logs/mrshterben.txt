@@ -295,3 +295,4 @@ None [-1001351933744]: Кредиты не дорого, программа ло
 None [-1001351933744]: /setbank@just_a_bot_for_redmi_bot
 None [-1001351933744]: /setbank@just_a_bot_for_redmi_bot
 None [-1001351933744]: /setbank@just_a_bot_for_redmi_bot credit_p 6
+None [-1001351933744]: /mybank@just_a_bot_for_redmi_bot

@@ -39,7 +39,6 @@ def second_loop():
 def minute_loop():
     while True:
         time.sleep(60)
-        print("-------------")
         uptime["min"] += 1
         for item in bf.message_stack:
             try:
@@ -550,20 +549,7 @@ def command_help(message):
 ##################################################################################
 @bot.message_handler(commands=["uptime"])
 def answer(message):
-    if uptime["sec"] < 10:
-        sec = "0"+str(uptime["sec"])
-    else:
-        sec = str(uptime["sec"])
-    if uptime["min"] < 10:
-        min = "0"+str(uptime["min"])
-    else:
-        min = str(uptime["min"])
-    if uptime["hour"] < 10:
-        hour = "0"+str(uptime["hour"])
-    else:
-        hour = str(uptime["hour"])
-    result = hour+":"+min+":"+sec
-    bf.ReplyTo(bot, message, "Ебашу на благо общества уже:  ⏱ *"+result+"*", stack=False, timeout=10, use_markdown=True)
+    bf.ReplyTo(bot, message, "Ебашу на благо общества уже:  ⏱ *"+str(uptime["sec"])+" секунд(ы)* и "+"*"+str(uptime["min"])+"* минут(ы)", stack=False, timeout=10, use_markdown=True)
 ##################################################################################
 
 
