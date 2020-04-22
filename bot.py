@@ -44,7 +44,6 @@ def hour_loop():
 @bot.message_handler(commands=["rullet"])
 def answer(message):
     global GAME_AVAILABLE
-    print(message.text.split())
     if len(message.text.split()) < 2:
         bf.SlotGame(bot, message, game_available=GAME_AVAILABLE)
         return
@@ -53,6 +52,10 @@ def answer(message):
     bf.SlotGame(bot, message, game_available=GAME_AVAILABLE, game_bet=bet)
     GAME_AVAILABLE = False
 
+@bot.message_handler(commands=["source"])
+def answer(message):
+    bf.ReplyTo(bot, message, "Исодный код - [GitHub](https://github.com/LinerSRT/telegram_bot)", use_markdown=True)
+    pass
 
 if __name__ == '__main__':
     threading.Thread(name="botUpdater", target=bot_updater, args=()).start()

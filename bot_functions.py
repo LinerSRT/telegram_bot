@@ -6,17 +6,22 @@ import bot as mainf
 message_stack = []
 
 class ReplyTo(threading.Thread):
-    def __init__(self, argument, bot, message, text, stack=True, timeout=10):
+    def __init__(self, bot, message, text, stack=True, timeout=10, use_markdown=False):
         super(ReplyTo, self).__init__()
-        self.argument = argument
+        self.argument = str(message.from_user.id)
         self.bot = bot
         self.message = message
         self.text = text
         self.stack = stack
         self.timeout = timeout
+        self.use_markdown = use_markdown
+        self.start()
 
     def run(self):
-        msg = self.bot.reply_to(self.message, self.text)
+        if self.use_markdown:
+            msg = self.bot.reply_to(self.message, self.text, parse_mode="Markdown")
+        else:
+            msg = self.bot.reply_to(self.message, self.text)
         if self.stack:
             message_stack.append(self.message)
             message_stack.append(msg)
@@ -31,17 +36,22 @@ class ReplyTo(threading.Thread):
             finally:
                 pass
 class SendMessage(threading.Thread):
-    def __init__(self, argument, bot, message, text, stack=True, timeout=10):
+    def __init__(self, bot, message, text, stack=True, timeout=10, use_markdown=False):
         super(SendMessage, self).__init__()
-        self.argument = argument
+        self.argument = str(message.from_user.id)
         self.bot = bot
         self.message = message
         self.text = text
         self.stack = stack
         self.timeout = timeout
+        self.use_markdown = use_markdown
+        self.start()
 
     def run(self):
-        msg = self.bot.send_message(self.message.chat.id, self.text)
+        if self.use_markdown:
+            msg = self.bot.reply_to(self.message, self.text, parse_mode="Markdown")
+        else:
+            msg = self.bot.reply_to(self.message, self.text)
         if self.stack:
             message_stack.append(self.message)
             message_stack.append(msg)
