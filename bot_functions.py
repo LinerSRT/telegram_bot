@@ -171,3 +171,5 @@ class SlotGame(threading.Thread):
         self.bot.delete_message(chat_id, self.message.message_id)
 
 
+
+
