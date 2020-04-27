@@ -15,7 +15,7 @@ import re
 import random
 import user as uf
 
-
+TOKEN = "1203682284:AAH25R_QUIzaUi5SyIWuzDM1Oc404E2bFLk"
 bot = telebot.TeleBot(TOKEN, threaded=True, num_threads=8)
 uptime = {
     "sec":0,
@@ -79,7 +79,7 @@ def banListener(messages):
         if username is not None:
             username = username.replace("@", "")
             if fileio.isUserExist(username):
-                if database.getDBValue(username, "user", "banned") == "1":
+                if db.getDBValue(username, "user", "banned") == "1":
                     banned_func.processUser(username, bot, message)
                     pass
 def messageCounter(messages):
@@ -87,14 +87,18 @@ def messageCounter(messages):
         username = message.from_user.username
         if username is not None:
             username = username.replace("@", "")
-            if fileio.isUserExist(username):
-                if db.getDBValue(username, "user", "banned") != "1":
-                    try:
-                        target_message_count = int(db.getDBValue(username, "stats", "message_count"))
-                        target_message_count += 1
-                        db.setDBValue(username, "stats", "message_count", str(target_message_count))
-                    except:
-                        pass
+            if username == "PepegroundBot":
+                print("222")
+                bot.delete_message(message.chat.id, message.message_id)
+            else:
+                if fileio.isUserExist(username):
+                    if db.getDBValue(username, "user", "banned") != "1":
+                        try:
+                            target_message_count = int(db.getDBValue(username, "stats", "message_count"))
+                            target_message_count += 1
+                            db.setDBValue(username, "stats", "message_count", str(target_message_count))
+                        except:
+                            pass
 def newUserListener(messages):
     for message in messages:
         if message.content_type == "new_chat_members":
@@ -103,27 +107,37 @@ def newUserListener(messages):
             newUserName = message.new_chat_member.username
             newUserNameT = message.new_chat_member.first_name
             isNewUserBot = message.new_chat_member.is_bot
-            if bool(isNewUserBot):
-                UI = "Новый бот детектед!  БЛЯДАЖАА\n"
-                UI += "Имя бота: "+newUserNameT+"\n"
-                UI += "Ник бота: @"+newUserName+"\n"
-                bf.SendMessage(bot, message, UI, stack=False, timeout=10)
-                bf.SendMessage(bot, message, "Нам пидоры не нужны, ПАШОЛ НАХУЙ", stack=False, timeout=10)
-                bot.kick_chat_member(chatID, newUserID)
+            if newUserName != "PepegroundBot":
+                if bool(isNewUserBot):
+                    UI = "Новый бот детектед!  БЛЯДАЖАА\n"
+                    UI += "Имя бота: "+newUserNameT+"\n"
+                    UI += "Ник бота: @"+newUserName+"\n"
+                    bf.SendMessage(bot, message, UI, stack=False, timeout=10)
+                    bf.SendMessage(bot, message, "Нам пидоры не нужны, ПАШОЛ НАХУЙ", stack=False, timeout=10)
+                    bot.kick_chat_member(chatID, newUserID)
 
 bot.set_update_listener(userListener)
 bot.set_update_listener(banListener)
 bot.set_update_listener(messageCounter)
 bot.set_update_listener(newUserListener)
 ##################################################################################
-@bot.message_handler(commands=["test"])
+@bot.message_handler(content_types=["text"])
+def answer(message):
+    username = message.from_user.username.replace("@", "")
+    print(username)
+    if username == "PepegroundBot":
+        bot.delete_message(message.chat.id, message.message_id)
+
+
+
+##################################################################################
+@bot.message_handler(commands=["test2"])
 def answer(message):
     username = message.from_user.username.replace("@", "")
     if not user_func.isOwner(username):
         return
     UI = ""
     for item in db.getListUsersWhereValue("eco", "money", None):
-        print(item)
         UI += "User: "+item[0]+" | money "+str(item[1])+"\n"
     bf.ReplyTo(bot, message, UI, stack=False, timeout=30)
 
@@ -138,7 +152,6 @@ def answer(message):
     for user in fileio.getUserList():
         db.setDBValue(user, "eco", "money", "1000")
     for item in db.getListUsersWhereValue("eco", "money", None):
-        print(item)
         UI += "User: "+item[0]+" | money "+str(item[1])+"\n"
     bf.ReplyTo(bot, message, UI, stack=False, timeout=30)
 
@@ -156,7 +169,7 @@ def answer(message):
         GAME_AVAILABLE = False
         return
     bet = int(message.text.split()[1])
-    bf.SlotGame(bot, message, game_available=GAME_AVAILABLE, game_bet=bet)
+    bf.SlotGame(bot, message, game_available=GAME_AVAILABLE, game_bet=bet).start()
     GAME_AVAILABLE = False
 ##################################################################################
 @bot.message_handler(commands=["source"])
@@ -721,7 +734,6 @@ def answer(message):
         username = message.from_user.username.replace("@", "")
         if user_func.isOwner(username):
             command = int(message.text.split()[1])
-            print(command)
             for user in fileio.getUserList():
                 current_money = int(db.getDBValue(username, "eco", "money"))
                 db.setDBValue(user, "eco", "money", str(current_money+command))
@@ -738,7 +750,6 @@ def answer(message):
         username = message.from_user.username.replace("@", "")
         if user_func.isOwner(username):
             command = int(message.text.split()[1])
-            print(command)
             for user in fileio.getUserList():
                 current_money = int(db.getDBValue(username, "eco", "money"))
                 db.setDBValue(user, "eco", "money", str(current_money-command))

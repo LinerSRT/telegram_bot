@@ -1,9 +1,0 @@
-<bank>
-    <money>1000000</money>
-    <credit_percent>5</credit_percent>
-    <time_to_pay>60</time_to_pay>
-    <users>
-        <user id="Llne_R">4000</user>
-        <user id="TestID">2000</user>
-    </users>
-</bank>
